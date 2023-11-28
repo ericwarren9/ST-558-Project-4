@@ -32,6 +32,7 @@ ui <- fluidPage(
     tabPanel(
       "About", 
       uiOutput("about_text1"),
+      br(),
       uiOutput("about_text2")
     ),
     tabPanel(

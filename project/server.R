@@ -30,7 +30,7 @@ shinyServer(function(input, output, session) {
     link3 <- a("the source for NFL salary cap maximum's for each season", href = "https://www.spotrac.com/nfl/cba/")
     
     # Make text for this section
-    paste0("To gather this data, we had to use three sources to get the information we wanted on a player's statistics, a player's salary, and the NFL's salary cap maximum in a given season so we know what percent the player was making from the team's budget. Please feel free to observe the corresponding links that will take you to ", link1, ", ", link2, ", and ", link3, ".")
+    tagList("To gather this data, we had to use three sources to get the information we wanted on a player's statistics, a player's salary, and the NFL's salary cap maximum in a given season so we know what percent the player was making from the team's budget. Please feel free to observe the corresponding links that will take you to ", link1, ", ", link2, ", and ", link3, ".")
   })
 
 })
