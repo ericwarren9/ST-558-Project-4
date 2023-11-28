@@ -27,8 +27,10 @@ ui <- fluidPage(
     windowTitle =  "Quarterbacks Cap Hit Percentage by Performance"
   ),
   shinytitle::use_shiny_title(),
+  # Make into different tabs
   tabsetPanel(
     type = "tabs",
+    # About tab
     tabPanel(
       "About", 
       uiOutput("about_text1"),
@@ -37,6 +39,7 @@ ui <- fluidPage(
       br(),
       uiOutput("about_text3"),
       br(),
+      # This formats the images how we want
       fluidRow(
         column(3, NULL),
         column(3,
@@ -49,11 +52,31 @@ ui <- fluidPage(
         )
       )
     ),
+    # Data exploration tab
     tabPanel(
       "Data Exploration"
     ),
+    # Modeling tab
     tabPanel(
-      "Modeling"
+      
+      "Modeling",
+      # Make tabs within the Modeling tab
+      tabsetPanel(
+        
+        type = "tabs",
+        # Modeling Info tab
+        tabPanel(
+          "Modeling Info"
+        ),
+        # Modeling Fitting tab
+        tabPanel(
+          "Modeling Fitting"
+        ),
+        # Prediction tab
+        tabPanel(
+          "Prediction"
+        )
+      )
     )
   )
 )
