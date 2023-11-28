@@ -30,7 +30,9 @@ ui <- fluidPage(
   tabsetPanel(
     type = "tabs",
     tabPanel(
-      "About", uiOutput("about")
+      "About", 
+      uiOutput("about_text1"),
+      uiOutput("about_text2")
     ),
     tabPanel(
       "Data Exploration"
