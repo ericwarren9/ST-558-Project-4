@@ -7,20 +7,22 @@
 #    http://shiny.rstudio.com/
 #
 
+
+# Load Server Libraries ---------------------------------------------------
+
 library(shiny)
+library(tidyverse)
+library(bslib)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
-# Define server logic required to draw a histogram
-shinyServer(function(input, output) {
 
-    output$distPlot <- renderPlot({
+# Start the server section of app -----------------------------------------
 
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
+shinyServer(function(input, output, session) {
 
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white')
-
-    })
+  output$about <- renderUI({
+    text <- paste0("In this section, we are going to examine how much (or what percentage of) a NFL quarterback's salary is represented by the NFL's salary cap maximum. We are going to see how much performance can affect this number. Can we then use a quarterback's statistics to try to predict what percentage of the NFL cap hit he really should be making in a given year?")
+    h3(text)
+  })
 
 })

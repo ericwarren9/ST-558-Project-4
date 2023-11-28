@@ -13,6 +13,7 @@
 library(shiny)
 library(tidyverse)
 library(bslib)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 
 # The application ---------------------------------------------------------
@@ -33,7 +34,7 @@ ui <- fluidPage(
       "About"
     ),
     tabPanel(
-      "Data Exploration"
+      "Data Exploration", uiOutput("about")
     ),
     tabPanel(
       "Modeling"
