@@ -25,5 +25,18 @@ ui <- fluidPage(
         br(),
     ), 
     windowTitle =  "Quarterbacks Cap Hit Percentage by Performance"
+  ),
+  shinytitle::use_shiny_title(),
+  tabsetPanel(
+    type = "tabs",
+    tabPanel(
+      "About"
+    ),
+    tabPanel(
+      "Data Exploration"
+    ),
+    tabPanel(
+      "Modeling"
+    )
   )
 )
