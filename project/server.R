@@ -13,7 +13,6 @@
 library(shiny)
 library(tidyverse)
 library(bslib)
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 
 # Start the server section of app -----------------------------------------
