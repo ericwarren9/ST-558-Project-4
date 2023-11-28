@@ -12,6 +12,7 @@
 
 library(shiny)
 library(tidyverse)
+library(bslib)
 
 
 # The application ---------------------------------------------------------
