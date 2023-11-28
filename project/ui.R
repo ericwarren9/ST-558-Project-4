@@ -35,7 +35,9 @@ ui <- fluidPage(
       br(),
       uiOutput("about_text2"),
       br(),
-      uiOutput("about_text3")
+      uiOutput("about_text3"),
+      br(),
+      uiOutput("about_images")
     ),
     tabPanel(
       "Data Exploration"
