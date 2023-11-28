@@ -40,8 +40,16 @@ shinyServer(function(input, output, session) {
     HTML(paste0("As you are going through this application, you might notice that there are 3 tabs. The first tab, the one you are currently on (which is the ", strong("About"), " tab). This tab will give you information about what that project is, the data sources, functions of each tab, and an image that will help you better understand what this project is. The next tab is the ", strong("Data Exploration"), " tab. This section will allow the user to create different numerical and graphical summaries from our data. This section is an interactive exploratory data analysis in which the user can gain their own conclusions from the data, based on what they want to look at. Lastly, there is a ", strong("Modeling"), " tab. This section allows the user to fit two types of supervised learning models. In our case, we will be looking at using a multiple linear regression model and a random forest model. The user will be able to select which variables we would like to use as predictors which in return will help fit an optimal optimial model that will be used in making predictions on what percentage of a NFL quarterback's salary should be allocated to them from the team's salary cap budget. I hope as the user that you enjoy the application and can live your dream by being a NFL General Manager who can make decisions on what to do with your favorite's quarterback situation."))
   })
   
-  output$about_images <- renderUI({
-    tags$div(img(src = "NFL logo.png", width = 70, height = 90), img(src = "Shiny App picture.png", width = 70, height = 90))
-  })
+  output$about_image1 <- renderImage({
+    list(src = "Shiny App picture.png",
+         width = "100%",
+         height = "100%")
+  }, deleteFile = F)
+  
+  output$about_image2 <- renderImage({
+    list(src = "NFL logo.png",
+         width = "100%",
+         height = "100%")
+  }, deleteFile = F)
 
 })
