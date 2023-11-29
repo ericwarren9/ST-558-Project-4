@@ -23,7 +23,7 @@ final_player_info <- read_rds("player_stats_and_salary.rds") %>%
     cap_hit_group = ifelse(cap_percent > 10, "high",
                            ifelse(cap_percent >= 5, "medium", "low")),
     missed_games = ifelse((as.numeric(year) < 2021) & (games == 16), "no",
-                          ifelse((as.numeric(year) > 2021) & (games == 17), "no", "yes")),
+                          ifelse((as.numeric(year) >= 2021) & (games == 17), "no", "yes")),
     cap_hit_group = factor(cap_hit_group, levels = c("low", "medium", "high")),
     cap_hit_group = relevel(cap_hit_group, "medium"),
     cap_hit_group = relevel(cap_hit_group, "low"),
@@ -146,6 +146,64 @@ shinyServer(function(input, output, session) {
     input$bins
   })
   
+  # Get the x variable in the scatterplot
+  scatterX <- reactive({
+    req("input$scatterChoice1")
+    input$scatterChoice1
+  })
+  
+  # Get the y variable in the scatterplot
+  scatterY <- reactive({
+    req("input$scatterChoice2")
+    input$scatterChoice2
+  })
+  
+  # Check to see if we should add color to the scatterplot
+  scatterplotColorCheck <- reactive({
+    req("input$scatterCheck1")
+    if(input$scatterCheck1 == 1){
+      "yes"
+    } else {
+      "no"
+    }
+  })
+  
+  # Figure out the column used for color of scatterplot
+  scatterplotColorColumn <- reactive({
+    req("input$scatterChoice3")
+    input$scatterChoice3
+  })
+  
+  # Check to see if we should add size to the scatterplot
+  scatterplotSizeCheck <- reactive({
+    req("input$scatterCheck2")
+    if(input$scatterCheck2 == 1){
+      "yes"
+    } else {
+      "no"
+    }
+  })
+  
+  # Figure out the column used for size of scatterplot
+  scatterplotSizeColumn <- reactive({
+    req("input$scatterChoice4")
+    input$scatterChoice4
+  })
+  
+  # Filter data
+  data_filtered <- reactive({
+    final_player_info %>%
+      filter(
+        (cap_percent >= input$slider1[1]) & 
+        (cap_percent <= input$slider1[2]) & 
+        (passing_yards_per_game >= input$slider2[1]) &
+        (passing_yards_per_game <= input$slider2[2]) & 
+        (rushing_yards_per_game >= input$slider3[1]) & 
+        (rushing_yards_per_game <= input$slider3[2]) &
+        (year %in% input$picker1)
+      )
+  })
+  
   # Make the correct graph
   output$graph <- renderPlot({
     
@@ -160,32 +218,49 @@ shinyServer(function(input, output, session) {
     groupingBarplotCheckPlot <- barplotGroupingCheck()
     groupingBarplotVariablePlot <- barplotGroupingVariable()
     numberOfHistogramBins <- numberOfBins()
+    scatterXVar <- scatterX()
+    scatterYVar <- scatterY()
+    scatterColorCheck <- scatterplotColorCheck()
+    scatterColorColumn <- scatterplotColorColumn()
+    scatterSizeCheck <- scatterplotSizeCheck()
+    scatterSizeColumn <- scatterplotSizeColumn()
+    filtered_data <- data_filtered()
     
     # Make boxplot
     if(plotChosen == "Boxplot"){
+      
       # Make graph based on conditions
       if(groupingBoxplotCheckPlot == "no") {
+        
         if(facetCheckPlot == "no") {
-          final_player_info %>%
+          
+          filtered_data %>%
             ggplot(aes_string(y = variablePlot)) +
             geom_boxplot() +
             theme_bw()
+          
         } else {
-          final_player_info %>%
+          
+          filtered_data %>%
             ggplot(aes_string(y = variablePlot)) +
             geom_boxplot() +
             facet_wrap(~ get(facetVariablePlot), labeller = label_value) +
             theme_bw()
+          
         }
       } else {
+        
         if(facetCheckPlot == "no") {
-          final_player_info %>%
+          
+          filtered_data %>%
             ggplot(aes_string(x = groupingBoxplotVariablePlot, y = variablePlot, fill = groupingBoxplotVariablePlot)) +
             geom_boxplot() +
             guides(fill = "none") +
             theme_bw()
+          
         } else {
-          final_player_info %>%
+          
+          filtered_data %>%
             ggplot(aes_string(x  = groupingBoxplotVariablePlot, y = variablePlot, fill = groupingBoxplotVariablePlot)) +
             geom_boxplot() +
             guides(fill = "none") +
@@ -193,30 +268,39 @@ shinyServer(function(input, output, session) {
             theme_bw()
         }
       }
+      
       # Now make the barplot graph
     } else if(plotChosen == "Barplot") {
+      
       # Make graph based on conditions
       if(groupingBarplotCheckPlot == "no") {
+        
         if(facetCheckPlot == "no") {
-          final_player_info %>%
+          filtered_data %>%
             ggplot(aes_string(x = barplotVariablePlot)) +
             geom_bar() +
             theme_bw()
+          
         } else {
-          final_player_info %>%
+          
+          filtered_data %>%
             ggplot(aes_string(x = barplotVariablePlot)) +
             geom_bar() +
             facet_wrap(~ get(facetVariablePlot), labeller = label_value) +
             theme_bw()
         }
       } else {
+        
         if(facetCheckPlot == "no") {
-          final_player_info %>%
+          
+          filtered_data %>%
             ggplot(aes_string(x = barplotVariablePlot, fill = groupingBarplotVariablePlot)) +
             geom_bar() +
             theme_bw()
+          
         } else {
-          final_player_info %>%
+          
+          filtered_data %>%
             ggplot(aes_string(x = barplotVariablePlot, fill = groupingBarplotVariablePlot)) +
             geom_bar() +
             facet_wrap(~ get(facetVariablePlot), labeller = label_value) +
@@ -224,20 +308,100 @@ shinyServer(function(input, output, session) {
         }
       }
     } else if(plotChosen == "Histogram") {
+      
       if(facetCheckPlot == "no") {
-        final_player_info %>%
+        
+        filtered_data %>%
           ggplot(aes_string(x = variablePlot)) +
           geom_histogram(bins = numberOfHistogramBins) +
           theme_bw()
+        
       } else {
-        final_player_info %>%
+        
+        filtered_data %>%
           ggplot(aes_string(x = variablePlot)) +
           geom_histogram(bins = numberOfHistogramBins) +
           facet_wrap(~ get(facetVariablePlot), labeller = label_value) +
           theme_bw()
       }
     } else {
-      NULL
+      
+      if(scatterColorCheck == "no") {
+        
+        if(scatterSizeCheck == "no") {
+          
+          if(facetCheckPlot == "no") {
+            
+            filtered_data %>%
+              ggplot(aes_string(x = scatterXVar, y = scatterYVar)) +
+              geom_point(alpha = 0.3) +
+              theme_bw()
+            
+          } else {
+            
+            filtered_data %>%
+              ggplot(aes_string(x = scatterXVar, y = scatterYVar)) +
+              geom_point(alpha = 0.3) +
+              facet_wrap(~ get(facetVariablePlot), labeller = label_value) +
+              theme_bw()
+          }
+          
+        } else {
+          
+          if(facetCheckPlot == "no"){
+            
+            filtered_data %>%
+              ggplot(aes_string(x = scatterXVar, y = scatterYVar, size = scatterSizeColumn)) +
+              geom_point(alpha = 0.3) +
+              theme_bw()
+            
+          } else {
+            
+            filtered_data %>%
+              ggplot(aes_string(x = scatterXVar, y = scatterYVar, size = scatterSizeColumn)) +
+              geom_point(alpha = 0.3) +
+              facet_wrap(~ get(facetVariablePlot), labeller = label_value) +
+              theme_bw()
+          }
+        }
+      } else {
+        
+        if(scatterSizeCheck == "no") {
+          
+          if(facetCheckPlot == "no") {
+            
+            filtered_data %>%
+              ggplot(aes_string(x = scatterXVar, y = scatterYVar, color = scatterColorColumn)) +
+              geom_point(alpha = 0.3) +
+              theme_bw()
+          } else {
+            
+            filtered_data %>%
+              ggplot(aes_string(x = scatterXVar, y = scatterYVar, color = scatterColorColumn)) +
+              geom_point(alpha = 0.3) +
+              facet_wrap(~ get(facetVariablePlot), labeller = label_value) +
+              theme_bw()
+          }
+          
+        } else {
+          
+          if(facetCheckPlot == "no"){
+            
+            filtered_data %>%
+              ggplot(aes_string(x = scatterXVar, y = scatterYVar, size = scatterSizeColumn, color = scatterColorColumn)) +
+              geom_point(alpha = 0.3) +
+              theme_bw()
+            
+          } else {
+            
+            filtered_data %>%
+              ggplot(aes_string(x = scatterXVar, y = scatterYVar, size = scatterSizeColumn, color = scatterColorColumn)) +
+              geom_point(alpha = 0.3) +
+              facet_wrap(~ get(facetVariablePlot), labeller = label_value) +
+              theme_bw()
+          }
+        }
+      }
     }
     
   })

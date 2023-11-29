@@ -23,7 +23,7 @@ final_player_info <- read_rds("player_stats_and_salary.rds") %>%
     cap_hit_group = ifelse(cap_percent > 10, "high",
                            ifelse(cap_percent >= 5, "medium", "low")),
     missed_games = ifelse((as.numeric(year) < 2021) & (games == 16), "no",
-                          ifelse((as.numeric(year) > 2021) & (games == 17), "no", "yes")),
+                          ifelse((as.numeric(year) >= 2021) & (games == 17), "no", "yes")),
     cap_hit_group = factor(cap_hit_group, levels = c("low", "medium", "high")),
     cap_hit_group = relevel(cap_hit_group, "medium"),
     cap_hit_group = relevel(cap_hit_group, "low"),
@@ -234,9 +234,9 @@ ui <- fluidPage(
                 selectInput(
                   "scatterChoice4", "Pick the Variable to Display as the size",
                   choices = c(
-                    colnames(final_player_info)
+                    colnames(dplyr::select_if(final_player_info, is.factor))
                   ),
-                  selected = "turnovers_per_game"
+                  selected = "missed_games"
                 )
               ),
               conditionalPanel(
