@@ -54,15 +54,39 @@ ui <- fluidPage(
     ),
     # Data exploration tab
     tabPanel(
-      "Data Exploration"
+      "Data Exploration",
+      tabsetPanel(
+        type = "tabs",
+        # graphing tab
+        tabPanel(
+          "Different EDA Graphs",
+          sidebarPanel(
+            h3(
+              "Select the Exploratory Data Analysis Features You Would Like to See"
+            ),
+            selectInput(
+              "var", "Graphical Display to View",
+              choices = c(
+                "Scatter Plot" = "scatter",
+                "Bar Plot" = "bar",
+                "Histogram" = "hist",
+                "Box Plot" = "box"
+              ),
+              selected = "scatter"
+            )
+          )
+        ),
+        # Summary tab
+        tabPanel(
+          "Different EDA Summaries"
+        )
+      )
     ),
     # Modeling tab
     tabPanel(
-      
       "Modeling",
       # Make tabs within the Modeling tab
       tabsetPanel(
-        
         type = "tabs",
         # Modeling Info tab
         tabPanel(
