@@ -104,6 +104,13 @@ final_player_info <- merge(player_salary_percentage, stats, by = c("year", "play
 # Keep players who played at least 10 games (more than half the season) and had at least 100 passing attempts
 final_player_info <- final_player_info %>%
   dplyr::filter((games >= 10) & (passing_attempts >= 100)) %>%
+  mutate(passing_yards_per_game = passing_yards / games,
+         rushing_yards_per_game = rushing_yards / games,
+         passing_tds_per_game = passing_tds / games,
+         rushing_tds_per_game = rushing_tds / games,
+         sacks_per_game = sacks / games,
+         turnovers_per_game = (passing_ints + fumbles) / games) %>%
+  dplyr::select(-c(player, passing_attempts, passing_completions, passing_ints, rushing_attempts, fumbles, fantasy_points, fantasy_points_per_game, passing_yards, rushing_yards, rushing_tds, passing_tds, sacks)) %>%
   distinct()
 
 # Save the data to use on our analysis later; first csv file, then rds as well for users
