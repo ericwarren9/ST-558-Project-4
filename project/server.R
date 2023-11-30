@@ -190,7 +190,7 @@ shinyServer(function(input, output, session) {
     input$scatterChoice4
   })
   
-  # Filter data
+  # Filter data for graphs
   data_filtered <- reactive({
     final_player_info %>%
       filter(
@@ -403,8 +403,175 @@ shinyServer(function(input, output, session) {
         }
       }
     }
-    
   })
+  
+  # Filter data for graphs
+  data_filtered2 <- reactive({
+    final_player_info %>%
+      filter(
+        (cap_percent >= input$slider4[1]) & 
+        (cap_percent <= input$slider4[2]) & 
+        (passing_yards_per_game >= input$slider5[1]) &
+        (passing_yards_per_game <= input$slider5[2]) & 
+        (rushing_yards_per_game >= input$slider6[1]) & 
+        (rushing_yards_per_game <= input$slider6[2]) &
+        (year %in% input$picker2)
+      )
+  })
+  
+  # Check which summary is selected
+  plotCheckSummary <- reactive({
+    req("input$var2")
+    input$var2
+  })
+  
+  # Check which column is used for summary
+  summaryVariable <- reactive({
+    req("input$numericChoice1")
+    input$numericChoice1
+  })
+  
+  # Make grouping variable checkbox condition
+  groupingSummaryCheck <- reactive({
+    req("input$numericCheckbox1")
+    if(input$numericCheckbox1 == 1){
+      "yes"
+    } else {
+      "no"
+    }
+  })
+  
+  # Get grouping variable for summaries
+  groupingColumnSummary <- reactive({
+    req("input$groupingVariablesForSummaries")
+    input$groupingVariablesForSummaries
+  })
+  
+  # Make second grouping variable checkbox condition
+  groupingSummaryCheck2 <- reactive({
+    req("input$numericCheckbox2")
+    if(input$numericCheckbox2 == 1){
+      "yes"
+    } else {
+      "no"
+    }
+  })
+  
+  # Get second grouping variable for summaries
+  groupingColumnSummary2 <- reactive({
+    req("input$groupingVariablesForSummaries2")
+    input$groupingVariablesForSummaries2
+  })
+  
+  # Make trimmed mean and sd checkbox condition
+  trimmedValues <- reactive({
+    req("input$trim")
+    input$trim
+  })
+  
+  # Make table of summaries
+  output$numericalSummary <- renderTable({
     
+    # Get variables needed
+    filtered_data2 <- data_filtered2()
+    summaryUsed <- plotCheckSummary()
+    variableSummary <- summaryVariable()
+    groupSummaryCheck <- groupingSummaryCheck()
+    groupColumnSummary <- groupingColumnSummary()
+    groupSummaryCheck2 <- groupingSummaryCheck2()
+    groupColumnSummary2 <- groupingColumnSummary2()
+    trimValues <- trimmedValues()
+    
+    # Make correct table
+    
+    # Do 5 number summary
+    if(summaryUsed == "Five Number Summary") {
+      
+      if(groupSummaryCheck == "no") {
+        
+        filtered_data2 %>%
+          summarize(
+            n = n(),
+            min = min(get(variableSummary)),
+            Q1 = quantile(get(variableSummary), 0.25),
+            median = median(get(variableSummary)),
+            Q3 = quantile(get(variableSummary), 0.75),
+            max = max(get(variableSummary)),
+          ) %>%
+          distinct()
+        
+      } else {
+        
+        if(groupSummaryCheck2 == "no") {
+          
+          filtered_data2 %>%
+            group_by("Values from Grouping Variable Selected" = get(groupColumnSummary)) %>%
+            summarize(
+              n = n(),
+              min = min(get(variableSummary)),
+              Q1 = quantile(get(variableSummary), 0.25),
+              median = median(get(variableSummary)),
+              Q3 = quantile(get(variableSummary), 0.75),
+              max = max(get(variableSummary)),
+            ) %>%
+            distinct()
+          
+        } else {
+          filtered_data2 %>%
+            group_by("Values from First Grouping Variable Selected" = get(groupColumnSummary), "Values from Second Grouping Variable Selected" = get(groupColumnSummary2)) %>%
+            summarize(
+              n = n(),
+              min = min(get(variableSummary)),
+              Q1 = quantile(get(variableSummary), 0.25),
+              median = median(get(variableSummary)),
+              Q3 = quantile(get(variableSummary), 0.75),
+              max = max(get(variableSummary)),
+            ) %>%
+            distinct()
+        }
+      }
+      
+      # Do Mean and sd next
+    } else if(summaryUsed == "Mean and Standard Deviation") {
+      
+      if(groupSummaryCheck == "no") {
+        
+        filtered_data2 %>%
+          summarize(
+            n = n(),
+            mean = mean(get(variableSummary), na.rm = TRUE, trim = trimValues),
+            sd = sd(get(variableSummary), na.rm = TRUE)
+          ) %>%
+          distinct()
+          
+        } else {
+          
+          if(groupSummaryCheck2 == "no") {
+          
+          filtered_data2 %>%
+            group_by("Values from Grouping Variable Selected" = get(groupColumnSummary)) %>%
+            summarize(
+              n = n(),
+              mean = mean(get(variableSummary), na.rm = TRUE, trim = trimValues),
+              sd = sd(get(variableSummary), na.rm = TRUE)
+            ) %>%
+            distinct()
+          } else {
+            
+            filtered_data2 %>%
+              group_by("Values from First Grouping Variable Selected" = get(groupColumnSummary), "Values from Second Grouping Variable Selected" = get(groupColumnSummary2)) %>%
+              summarize(
+                n = n(),
+                mean = mean(get(variableSummary), na.rm = TRUE, trim = trimValues),
+                sd = sd(get(variableSummary), na.rm = TRUE)
+              ) %>%
+              distinct()
+        }
+        }
+      # Do the quartiles next
+    } else if(summaryUsed == "Quantiles") {
+      
+    }
+  })
   
 })

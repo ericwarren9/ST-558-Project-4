@@ -84,24 +84,24 @@ ui <- fluidPage(
               ),
               sliderInput(
                 "slider1", "QB's Cap Hit for Particular NFL Season",
-                min = min(final_player_info$cap_percent),
-                max = max(final_player_info$cap_percent),
-                value = c(min(final_player_info$cap_percent),
-                          max(final_player_info$cap_percent))
+                min = min(final_player_info$cap_percent) - 1,
+                max = max(final_player_info$cap_percent) + 1,
+                value = c(min(final_player_info$cap_percent) - 1,
+                          max(final_player_info$cap_percent) + 1)
               ),
               sliderInput(
                 "slider2", "QB's Passing Yards per Game for Particular NFL Season",
-                min = min(final_player_info$passing_yards_per_game),
-                max = max(final_player_info$passing_yards_per_game),
-                value = c(min(final_player_info$passing_yards_per_game),
-                          max(final_player_info$passing_yards_per_game))
+                min = min(final_player_info$passing_yards_per_game) - 1,
+                max = max(final_player_info$passing_yards_per_game)+ 1,
+                value = c(min(final_player_info$passing_yards_per_game) - 1,
+                          max(final_player_info$passing_yards_per_game) + 1)
               ),
               sliderInput(
                 "slider3", "QB's Rushing Yards per Game for Particular NFL Season",
-                min = min(final_player_info$rushing_yards_per_game),
-                max = max(final_player_info$rushing_yards_per_game),
-                value = c(min(final_player_info$rushing_yards_per_game),
-                          max(final_player_info$rushing_yards_per_game))
+                min = min(final_player_info$rushing_yards_per_game) - 1,
+                max = max(final_player_info$rushing_yards_per_game) + 1,
+                value = c(min(final_player_info$rushing_yards_per_game) - 1,
+                          max(final_player_info$rushing_yards_per_game) + 1)
               ),
               pickerInput(
                 "picker1", "Select NFL Season(s)",
@@ -259,147 +259,177 @@ ui <- fluidPage(
         # Summary tab
         tabPanel(
           "Different EDA Summaries",
-          sidebarPanel(
-            h3(
-              "Select the Exploratory Data Analysis Features You Would Like to See"
-            ),
-            sliderInput(
-              "slider1", "QB's Cap Hit for Particular NFL Season",
-              min = min(final_player_info$cap_percent),
-              max = max(final_player_info$cap_percent),
-              value = c(min(final_player_info$cap_percent),
-                        max(final_player_info$cap_percent))
-            ),
-            sliderInput(
-              "slider2", "QB's Passing Yards per Game for Particular NFL Season",
-              min = min(final_player_info$passing_yards_per_game),
-              max = max(final_player_info$passing_yards_per_game),
-              value = c(min(final_player_info$passing_yards_per_game),
-                        max(final_player_info$passing_yards_per_game))
-            ),
-            sliderInput(
-              "slider3", "QB's Rushing Yards per Game for Particular NFL Season",
-              min = min(final_player_info$rushing_yards_per_game),
-              max = max(final_player_info$rushing_yards_per_game),
-              value = c(min(final_player_info$rushing_yards_per_game),
-                        max(final_player_info$rushing_yards_per_game))
-            ),
-            pickerInput(
-              "picker1", "Select NFL Season(s)",
-              choices = str_sort(unique(final_player_info$year), decreasing = T),
-              selected = unique(final_player_info$year),
-              options = list(`actions-box` = TRUE,
-                             create = FALSE,
-                             placeholder = "Please Select a Position",
-                             onDropdownOpen = I("function($dropdown) {if (!this.lastQuery.length) {this.close(); this.settings.openOnFocus = false;}}"),
-                             onType = I("function (str) {if (str === \"\") {this.close();}}"),
-                             onItemAdd = I("function() {this.close();}")),
-              multiple = T
-            ),
-            selectInput(
-              "var2", "Numeric Display to View",
-              choices = c(
-                "Five Number Summary",
-                "Contingency Table",
-                "Mean and Standard Deviation",
-                "Quantiles"
+          sidebarLayout(
+            sidebarPanel(
+              h3(
+                "Select the Exploratory Data Analysis Features You Would Like to See"
               ),
-              selected = "Five Number Summary"
-            ),
-            # Make condition on graph selected checked
-            conditionalPanel(
-              condition = "['Five Number Summary', 'Mean and Standard Deviation', 'Quantiles'].indexOf(input.var2) > -1",
-              selectInput(
-                "numericChoice1", "Pick the Variable to Get Summary On",
-                choices = c(
-                  colnames(dplyr::select_if(final_player_info, is.numeric))
-                ),
-                selected = "passing_yards_per_game"
+              sliderInput(
+                "slider4", "QB's Cap Hit for Particular NFL Season",
+                min = min(final_player_info$cap_percent) - 1,
+                max = max(final_player_info$cap_percent) + 1,
+                value = c(min(final_player_info$cap_percent) - 1,
+                          max(final_player_info$cap_percent) + 1)
               ),
-              checkboxInput(
-                "numericCheckbox1", 
-                "Would you like to add a grouping variable?",
-                value = FALSE
-              )
-            ),
-            conditionalPanel(
-              condition = "input.numericCheckbox1 == 1 && ['Five Number Summary', 'Mean and Standard Deviation', 'Quantiles'].indexOf(input.var2) > -1",
-              selectInput(
-                "groupingVariablesForSummaries", 
-                "Select your grouping variable",
-                choices = c(
-                  colnames(dplyr::select_if(final_player_info, is.factor))
-                ),
-                selected = "cap_hit_group"
-              )
-            ),
-            conditionalPanel(
-              condition = "input.var2 == 'Contingency Table'",
-              selectInput(
-                "contingencyTableSize",
-                "What kind of contingency table do you want?",
-                choices = c(
-                  "One Way", "Two Way", "Three Way"
-                ),
-                selected = "One Way"
-              )
-            ),
-            conditionalPanel(
-              condition = "input.var2 == 'Contingency Table' && input.contingencyTableSize == 'One Way'",
-              selectInput(
-                "oneWay",
-                "Select the Variable for Your One Way Table",
-                choices = c(
-                  colnames(dplyr::select_if(final_player_info, is.factor))
-                ),
-                selected = "cap_hit_group"
-              )
-            ),
-            conditionalPanel(
-              condition = "input.var2  ==  'Contingency Table' && input.contingencyTableSize == 'Two Way'",
-              selectInput(
-                "twoWay1",
-                "Select the First Variable for Your Two Way Table",
-                choices = c(
-                  colnames(dplyr::select_if(final_player_info, is.factor))
-                ),
-                selected = "cap_hit_group"
+              sliderInput(
+                "slider5", "QB's Passing Yards per Game for Particular NFL Season",
+                min = min(final_player_info$passing_yards_per_game) - 1,
+                max = max(final_player_info$passing_yards_per_game) + 1,
+                value = c(min(final_player_info$passing_yards_per_game) - 1,
+                          max(final_player_info$passing_yards_per_game) + 1)
+              ),
+              sliderInput(
+                "slider6", "QB's Rushing Yards per Game for Particular NFL Season",
+                min = min(final_player_info$rushing_yards_per_game) - 1,
+                max = max(final_player_info$rushing_yards_per_game) + 1,
+                value = c(min(final_player_info$rushing_yards_per_game) - 1,
+                          max(final_player_info$rushing_yards_per_game) + 1)
+              ),
+              pickerInput(
+                "picker2", "Select NFL Season(s)",
+                choices = str_sort(unique(final_player_info$year), decreasing = T),
+                selected = unique(final_player_info$year),
+                options = list(`actions-box` = TRUE,
+                               create = FALSE,
+                               placeholder = "Please Select a Position",
+                               onDropdownOpen = I("function($dropdown) {if (!this.lastQuery.length) {this.close(); this.settings.openOnFocus = false;}}"),
+                               onType = I("function (str) {if (str === \"\") {this.close();}}"),
+                               onItemAdd = I("function() {this.close();}")),
+                multiple = T
               ),
               selectInput(
-                "twoWay2",
-                "Select the Second Variable for Your Two Way Table",
+                "var2", "Numeric Display to View",
                 choices = c(
-                  colnames(dplyr::select_if(final_player_info, is.factor))
+                  "Five Number Summary",
+                  "Contingency Table",
+                  "Mean and Standard Deviation",
+                  "Quantiles"
                 ),
-                selected = "missed_games"
+                selected = "Five Number Summary"
+              ),
+              # Make condition on graph selected checked
+              conditionalPanel(
+                condition = "['Five Number Summary', 'Mean and Standard Deviation', 'Quantiles'].indexOf(input.var2) > -1",
+                selectInput(
+                  "numericChoice1", "Pick the Variable to Get Summary On",
+                  choices = c(
+                    colnames(dplyr::select_if(final_player_info, is.numeric))
+                  ),
+                  selected = "passing_yards_per_game"
+                ),
+                checkboxInput(
+                  "numericCheckbox1", 
+                  "Would you like to add a grouping variable?",
+                  value = FALSE
+                )
+              ),
+              conditionalPanel(
+                condition = "input.numericCheckbox1 == 1 && ['Five Number Summary', 'Mean and Standard Deviation', 'Quantiles'].indexOf(input.var2) > -1",
+                selectInput(
+                  "groupingVariablesForSummaries", 
+                  "Select your grouping variable",
+                  choices = c(
+                    colnames(dplyr::select_if(final_player_info, is.factor))
+                  ),
+                  selected = "cap_hit_group"
+                ),
+                checkboxInput(
+                  "numericCheckbox2", 
+                  "Would you like to add a second grouping variable?",
+                  value = FALSE
+                )
+              ),
+              conditionalPanel(
+                condition = "input.numericCheckbox1 == 1 && input.numericCheckbox2 == 1 && ['Five Number Summary', 'Mean and Standard Deviation', 'Quantiles'].indexOf(input.var2) > -1",
+                selectInput(
+                  "groupingVariablesForSummaries2", 
+                  "Select your second grouping variable",
+                  choices = c(
+                    colnames(dplyr::select_if(final_player_info, is.factor))
+                  ),
+                  selected = "year"
+                )
+              ),
+              conditionalPanel(
+                condition = "input.var2 == 'Mean and Standard Deviation'",
+                sliderInput(
+                  "trim", "Select the fraction of observations to be trimmed from each end before the mean is computed. 0 calculates all observations and 0.5 will calculate the median",
+                  min = 0,
+                  max = 0.5,
+                  value = 0
+                )
+              ),
+              conditionalPanel(
+                condition = "input.var2 == 'Contingency Table'",
+                selectInput(
+                  "contingencyTableSize",
+                  "What kind of contingency table do you want?",
+                  choices = c(
+                    "One Way", "Two Way", "Three Way"
+                  ),
+                  selected = "One Way"
+                )
+              ),
+              conditionalPanel(
+                condition = "input.var2 == 'Contingency Table' && input.contingencyTableSize == 'One Way'",
+                selectInput(
+                  "oneWay",
+                  "Select the Variable for Your One Way Table",
+                  choices = c(
+                    colnames(dplyr::select_if(final_player_info, is.factor))
+                  ),
+                  selected = "cap_hit_group"
+                )
+              ),
+              conditionalPanel(
+                condition = "input.var2  ==  'Contingency Table' && input.contingencyTableSize == 'Two Way'",
+                selectInput(
+                  "twoWay1",
+                  "Select the First Variable for Your Two Way Table",
+                  choices = c(
+                    colnames(dplyr::select_if(final_player_info, is.factor))
+                  ),
+                  selected = "cap_hit_group"
+                ),
+                selectInput(
+                  "twoWay2",
+                  "Select the Second Variable for Your Two Way Table",
+                  choices = c(
+                    colnames(dplyr::select_if(final_player_info, is.factor))
+                  ),
+                  selected = "missed_games"
+                )
+              ),
+              conditionalPanel(
+                condition = "input.var2  ==  'Contingency Table' && input.contingencyTableSize == 'Three Way'",
+                selectInput(
+                  "threeWay1",
+                  "Select the First Variable for Your Three Way Table",
+                  choices = c(
+                    colnames(dplyr::select_if(final_player_info, is.factor))
+                  ),
+                  selected = "cap_hit_group"
+                ),
+                selectInput(
+                  "threeWay2",
+                  "Select the Second Variable for Your Three Way Table",
+                  choices = c(
+                    colnames(dplyr::select_if(final_player_info, is.factor))
+                  ),
+                  selected = "missed_games"
+                ),
+                selectInput(
+                  "threeWay3",
+                  "Select the Third Variable for Your Three Way Table",
+                  choices = c(
+                    colnames(dplyr::select_if(final_player_info, is.factor))
+                  ),
+                  selected = "year"
+                )
               )
             ),
-            conditionalPanel(
-              condition = "input.var2  ==  'Contingency Table' && input.contingencyTableSize == 'Three Way'",
-              selectInput(
-                "threeWay1",
-                "Select the First Variable for Your Three Way Table",
-                choices = c(
-                  colnames(dplyr::select_if(final_player_info, is.factor))
-                ),
-                selected = "cap_hit_group"
-              ),
-              selectInput(
-                "threeWay2",
-                "Select the Second Variable for Your Three Way Table",
-                choices = c(
-                  colnames(dplyr::select_if(final_player_info, is.factor))
-                ),
-                selected = "missed_games"
-              ),
-              selectInput(
-                "threeWay3",
-                "Select the Third Variable for Your Three Way Table",
-                choices = c(
-                  colnames(dplyr::select_if(final_player_info, is.factor))
-                ),
-                selected = "year"
-              )
+            mainPanel(
+              tableOutput("numericalSummary")
             )
           )
         )
