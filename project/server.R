@@ -38,7 +38,7 @@ shinyServer(function(input, output, session) {
 
   # Get text for first paragraph for about tab
   output$about_text1 <- renderUI({
-    paste0("In this section, we are going to examine how much (or what percentage of) a NFL quarterback's salary is represented by the NFL's salary cap maximum. We are going to see how much performance can affect this number. Can we then use a quarterback's statistics to try to predict what percentage of the NFL cap hit he really should be making in a given year? We are going to use data from the NFL seasons of 2007 to 2022 (excluding 2010 since it was a lockout year and salaries and player statistics are not representative of a normal year) to answer this question.")
+    paste0("In this section, we are going to examine how much (or what percentage of) a NFL quarterback's salary is represented by the NFL's salary cap maximum. We are going to see how much performance can affect this number. Can we then use a quarterback's statistics to try to predict what percentage of the NFL cap hit he really should be making in a given year? We are going to use data from the NFL seasons of 2007 to 2022 (excluding 2010 since it was a lockout year and salaries and player statistics are not representative of a normal year) to answer this question. Please note that all data for quarterbacks is filtered ahead of time for players who are deemed 'starters' which means they played at least ten games and had at least 100 passing attempts. 2007 was a weird year with many injuries so not as much 'valid' data is present for us to analyze.")
   })
   
   # Get text for second paragraph for about tab
@@ -685,6 +685,19 @@ shinyServer(function(input, output, session) {
         with(filtered_data2, table(droplevels(get(threeWayValue1)), droplevels(get(threeWayValue2)), droplevels(get(threeWayValue3))))
       }
     }
+  })
+  
+  # Start the write up for the about section of the Modeling tab
+  output$model_about1 <- renderText({
+    HTML(paste0("In this section, we are going to examine two different modeling techniques, which are ", strong("multiple linear regression"), " and  ", strong("random forest"), "."))
+  })
+  
+  output$model_about2 <- renderText({
+    HTML(paste0("Multiple linear regression is a statistical modeling technique that uses several explanatory (or also known as predictor) variables to predict the outcome of a response variable. This is an extention of ", strong("simple linear regression"), ", in which we only use one variable to predict our response. In our case, we are trying to predict the ", strong("cap hit percentage"), " of a NFL quarterback based on how well they are performing. If you want to understand the math behind a multiple linear regression model, we can write this model's equation as $$\\hat{y} = \\beta_0 + \\beta_1 x_1 + ... + \\beta_n x_n$$ where each beta value represent the partial slope of each predictor. In less math terms this is saying that this represents the average amount by which the dependent (or response) variable increases when only that particular independent (predictor) variable increases one unit AND the other independent (predictor) variables are held constant (meaning they do not change at all). In multiple linear regression, there are two major advantages to analyzing data using modeling approach. The first is the ability to determine the relative influence of one or more predictor variables to the response. For example, we can do hypothesis testing to see what predictors have a partial slope that is statistically different from zero (meaning that the predictor is valuable to used in final prediction purposes). The other advantage is that they are easy to implement and analyze. It is really easy using some basic statistical software (like R that are using now) to make a multiple linear regression model. They are also easy to predict as we have determined how to make a prediction using slope and intercept values since middle school. Some disadvantages include that they have some required assumptions that need to be met in order to accurately fit the model. The five main assumptions underlying multiple regression models must be satisfied are linearity, homoskedasticity, independence of errors, normality, and independence of independent variables. If one of these are violated then our predictions will not be reliable. Another disadvantage is that these models are prone to overfitting which occurs when we include too many independent variables, leading to unreliable predictions. Despite these limitations, we are still going to select this model as one of choice to make predictions on our data."))
+  })
+  
+  output$model_about3 <- renderText({
+    HTML(paste0("A random forest model is an ensemble learning method for classification, regression and other tasks that operates by making many decision trees on our data. It can also be described as an algorithm that utilizes both repeated sampling and feature randomness to create an uncorrelated forest of decision trees. In this case we are going to use it for its regression purposes since our response variable is a continuous variable that cannot be classified. "))
   })
   
 })
