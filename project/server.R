@@ -469,6 +469,62 @@ shinyServer(function(input, output, session) {
     input$trim
   })
   
+  # Make quantile readability number function
+  quantileExtract <- function(text) {
+    text <- gsub(" ", "", text)
+    split <- strsplit(text, ",", fixed = FALSE)[[1]]
+    numbers <- as.numeric(split)
+    unlist(numbers)
+  }
+  
+  # Get quantile values from input values
+  quantileValuesInput <- reactive({
+    req("input$quantiles")
+    input$quantiles
+  })
+  
+  # Get the type of contingency table
+  whichTableInput <- reactive({
+    req("input$contingencyTableSize")
+    input$contingencyTableSize
+  })
+  
+  # Get value of one way table
+  oneWayTableValue <- reactive({
+    req("input$oneWay")
+    input$oneWay
+  })
+  
+  # Get first value of two way table
+  twoWayTableValue1 <- reactive({
+    req("input$twoWay1")
+    input$twoWay1
+  })
+  
+  # Get second value of two way table
+  twoWayTableValue2 <- reactive({
+    req("input$twoWay2")
+    input$twoWay2
+  })
+  
+  # Get first value of three way table
+  threeWayTableValue1 <- reactive({
+    req("input$threeWay1")
+    input$threeWay1
+  })
+  
+  # Get second value of three way table
+  threeWayTableValue2 <- reactive({
+    req("input$threeWay2")
+    input$threeWay2
+  })
+  
+  # Get third value of three way table
+  threeWayTableValue3 <- reactive({
+    req("input$threeWay3")
+    input$threeWay3
+  })
+  
   # Make table of summaries
   output$numericalSummary <- renderTable({
     
@@ -481,6 +537,14 @@ shinyServer(function(input, output, session) {
     groupSummaryCheck2 <- groupingSummaryCheck2()
     groupColumnSummary2 <- groupingColumnSummary2()
     trimValues <- trimmedValues()
+    quantileValues <- quantileValuesInput()
+    tableSize <- whichTableInput()
+    oneWayValue <- oneWayTableValue()
+    twoWayValue1 <- twoWayTableValue1()
+    twoWayValue2 <- twoWayTableValue2()
+    threeWayValue1 <- threeWayTableValue1()
+    threeWayValue2 <- threeWayTableValue2()
+    threeWayValue3 <- threeWayTableValue3()
     
     # Make correct table
     
@@ -567,10 +631,59 @@ shinyServer(function(input, output, session) {
               ) %>%
               distinct()
         }
-        }
+      }
       # Do the quartiles next
     } else if(summaryUsed == "Quantiles") {
       
+      if(groupSummaryCheck == "no") {
+        filtered_data2 %>%
+          summarize(
+            quantile = quantileExtract(quantileValues),
+            result = quantile(get(variableSummary), 
+                              probs = quantileExtract(quantileValues))
+          ) %>%
+          distinct()
+        
+      } else {
+        
+        if(groupSummaryCheck2 == "no") {
+          
+          filtered_data2 %>%
+            group_by("Values from Grouping Variable Selected" = get(groupColumnSummary)) %>%
+            summarize(
+              quantile = quantileExtract(quantileValues),
+              result = quantile(get(variableSummary), 
+                                probs = quantileExtract(quantileValues))
+            ) %>%
+            distinct()
+          
+        } else {
+          
+          filtered_data2 %>%
+            group_by("Values from First Grouping Variable Selected" = get(groupColumnSummary), "Values from Second Grouping Variable Selected" = get(groupColumnSummary2)) %>%
+            summarize(
+              quantile = quantileExtract(quantileValues),
+              result = quantile(get(variableSummary), 
+                                probs = quantileExtract(quantileValues))
+            ) %>%
+            distinct()
+        }
+      }
+      # Do the Contingency Table last
+    } else {
+      
+      if(tableSize == "One Way") {
+        
+        with(filtered_data2, table(droplevels(get(oneWayValue))))
+        
+      } else if(tableSize == "Two Way") {
+        
+        with(filtered_data2, table(droplevels(get(twoWayValue1)), droplevels(get(twoWayValue2))))
+        
+      } else {
+        
+        with(filtered_data2, table(droplevels(get(threeWayValue1)), droplevels(get(threeWayValue2)), droplevels(get(threeWayValue3))))
+      }
     }
   })
   

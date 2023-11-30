@@ -109,7 +109,7 @@ ui <- fluidPage(
                 selected = unique(final_player_info$year),
                 options = list(`actions-box` = TRUE,
                                create = FALSE,
-                               placeholder = "Please Select a Position",
+                               placeholder = "Please Select a Season",
                                onDropdownOpen = I("function($dropdown) {if (!this.lastQuery.length) {this.close(); this.settings.openOnFocus = false;}}"),
                                onType = I("function (str) {if (str === \"\") {this.close();}}"),
                                onItemAdd = I("function() {this.close();}")),
@@ -291,7 +291,7 @@ ui <- fluidPage(
                 selected = unique(final_player_info$year),
                 options = list(`actions-box` = TRUE,
                                create = FALSE,
-                               placeholder = "Please Select a Position",
+                               placeholder = "Please Select a Season",
                                onDropdownOpen = I("function($dropdown) {if (!this.lastQuery.length) {this.close(); this.settings.openOnFocus = false;}}"),
                                onType = I("function (str) {if (str === \"\") {this.close();}}"),
                                onItemAdd = I("function() {this.close();}")),
@@ -357,6 +357,14 @@ ui <- fluidPage(
                   min = 0,
                   max = 0.5,
                   value = 0
+                )
+              ),
+              conditionalPanel(
+                condition = "input.var2 == 'Quantiles'",
+                textInput(
+                  "quantiles", 
+                  "Quantile percentiles (enter numbers between 0 and 1 and separate values by a comma)", 
+                  placeholder = "Enter values separated by a comma..."
                 )
               ),
               conditionalPanel(
