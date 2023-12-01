@@ -16,9 +16,10 @@ library(bslib)
 library(shinyWidgets)
 library(caret)
 library(data.table)
-library(RSelenium)
 library(rvest)
 library(janitor)
+library(shinytitle)
+library(randomForest)
 
 
 # Read data in ------------------------------------------------------------
@@ -52,11 +53,11 @@ salary_cap <- (read_html("https://www.spotrac.com/nfl/cba/") %>%
 ui <- fluidPage(
   theme = bs_theme(bootswatch = "cerulean"),
   titlePanel(
-    div(span("Quarterbacks Cap Hit Percentage by Performance", style = "color:black", align = "center"),
+    div(span("NFL Quarterbacks Predicted Cap Hit by Performance", style = "color:black", align = "center"),
         align = "center",
         br(),
     ), 
-    windowTitle =  "Quarterbacks Predicted Cap Hit Percentage by Performance"
+    windowTitle =  "NFL Quarterbacks Predicted Cap Hit by Performance"
   ),
   shinytitle::use_shiny_title(),
   tags$style(type="text/css",
@@ -479,9 +480,15 @@ ui <- fluidPage(
           br(),
           uiOutput("model_about3"),
           br(),
-          withMathJax(uiOutput("model_about4")),
+          uiOutput("model_about4"),
           br(),
-          uiOutput("model_about5")
+          uiOutput("model_about5"),
+          br(),
+          withMathJax(uiOutput("model_about6")),
+          br(),
+          uiOutput("model_about7"),
+          br(),
+          uiOutput("model_about8")
         ),
         # Modeling Fitting tab
         tabPanel(
@@ -550,6 +557,9 @@ ui <- fluidPage(
           "Prediction",
           sidebarLayout(
             sidebarPanel(
+              h3(
+                "Build Your Own NFL QB by Inputting Their Statistics in a Given Season"
+              ),
               pickerInput(
                 "modelPicker2", "Select what year our 'player' played",
                 choices = unique(final_player_info$year),
@@ -562,68 +572,95 @@ ui <- fluidPage(
                                onItemAdd = I("function() {this.close();}")),
                 multiple = F
               ),
-              numericInput(
-                "modelSlider5", 
-                "What is the quarterback's passing percentage? Between 0 and 100.",
-                value = round(mean(final_player_info$passing_percentage), 2),
-                min = 0,
-                max = 100
+              conditionalPanel(
+                condition = "input.modelPicker1.indexOf('passing_percentage') >= 0",
+                numericInput(
+                  "modelSlider5", 
+                  "What is the quarterback's passing percentage? Between 0 and 100.",
+                  value = round(mean(final_player_info$passing_percentage), 2),
+                  min = 0,
+                  max = 100
+                )
               ),
-              numericInput(
-                "modelSlider6", 
-                "What is the quarterback's average passing yards per game? Between 0 and 400.",
-                min = 0,
-                max = 400,
-                value = round(mean(final_player_info$passing_yards_per_game), 2)
+              conditionalPanel(
+                condition = "input.modelPicker1.indexOf('passing_yards_per_game') >= 0",
+                numericInput(
+                  "modelSlider6", 
+                  "What is the quarterback's average passing yards per game? Between 0 and 400.",
+                  min = 0,
+                  max = 400,
+                  value = round(mean(final_player_info$passing_yards_per_game), 2)
+                )
               ),
-              numericInput(
-                "modelSlider7", 
-                "What is the quarterback's passing yards per attempt? Between 0 and 15.",
-                min = 0,
-                max = 15,
-                value = round(mean(final_player_info$passing_yards_per_attempt), 2)
+              conditionalPanel(
+                condition = "input.modelPicker1.indexOf('passing_yards_per_attempt') >= 0",
+                numericInput(
+                  "modelSlider7", 
+                  "What is the quarterback's passing yards per attempt? Between 0 and 15.",
+                  min = 0,
+                  max = 15,
+                  value = round(mean(final_player_info$passing_yards_per_attempt), 2)
+                )
               ),
-              numericInput(
-                "modelSlider8", 
-                "What is the quarterback's passing touchdowns for the season? Integer between 0 and 65",
-                min = 0,
-                max = 65,
-                value = ceiling(mean(final_player_info$passing_tds_per_game) * mean(final_player_info$games))
+              conditionalPanel(
+                condition = "input.modelPicker1.indexOf('passing_tds_per_game') >= 0",
+                numericInput(
+                  "modelSlider8", 
+                  "What is the quarterback's passing touchdowns for the season? Integer between 0 and 65",
+                  min = 0,
+                  max = 65,
+                  value = ceiling(mean(final_player_info$passing_tds_per_game) * mean(final_player_info$games))
+                )
               ),
-              numericInput(
-                "modelSlider9", 
-                "What is the quarterback's rushing yards per game? Between -10 and 100.",
-                min = -10,
-                max = 100,
-                value = round(mean(final_player_info$rushing_yards_per_game), 2)
+              conditionalPanel(
+                condition = "input.modelPicker1.indexOf('rushing_yards_per_game') >= 0",
+                numericInput(
+                  "modelSlider9", 
+                  "What is the quarterback's rushing yards per game? Between -10 and 100.",
+                  min = -10,
+                  max = 100,
+                  value = round(mean(final_player_info$rushing_yards_per_game), 2)
+                )
               ),
-              numericInput(
-                "modelSlider10", 
-                "What is the quarterback's rushing touchdowns for the season? Integer between 0 and 34.",
-                min = 0,
-                max = 34,
-                value = ceiling(mean(final_player_info$rushing_tds_per_game) * mean(final_player_info$games))
+              conditionalPanel(
+                condition = "input.modelPicker1.indexOf('rushing_tds_per_game') >= 0",
+                numericInput(
+                  "modelSlider10", 
+                  "What is the quarterback's rushing touchdowns for the season? Integer between 0 and 34.",
+                  min = 0,
+                  max = 34,
+                  value = ceiling(mean(final_player_info$rushing_tds_per_game) * mean(final_player_info$games))
+                )
               ),
-              numericInput(
-                "modelSlider11", 
-                "What is the quarterback's number of games played in a season? (We will assume they were the starter and not injured much.) Integer between 10 and 17",
-                min = 10,
-                max = 17,
-                value = ceiling(mean(final_player_info$games))
+              conditionalPanel(
+                condition = "input.modelPicker1.indexOf('games') >= 0",
+                numericInput(
+                  "modelSlider11", 
+                  "What is the quarterback's number of games played in a season? (We will assume they were the starter and not injured much.) Integer between 10 and 17",
+                  min = 10,
+                  max = 17,
+                  value = ceiling(mean(final_player_info$games))
+                )
               ),
-              numericInput(
-                "modelSlider12", 
-                "What is the quarterback's number of sacks for the season? Integer between 0 and 100",
-                min = 0,
-                max = 100,
-                value = ceiling(mean(final_player_info$sacks_per_game) * mean(final_player_info$games))
+              conditionalPanel(
+                condition = "input.modelPicker1.indexOf('sacks_per_game') >= 0",
+                numericInput(
+                  "modelSlider12", 
+                  "What is the quarterback's number of sacks for the season? Integer between 0 and 100",
+                  min = 0,
+                  max = 100,
+                  value = ceiling(mean(final_player_info$sacks_per_game) * mean(final_player_info$games))
+                )
               ),
-              numericInput(
-                "modelSlider13", 
-                "What is the quarterback's number of turnovers for the season? Integer between 0 and 45.",
-                min = 0,
-                max = 45,
-                value = ceiling(mean(final_player_info$turnovers_per_game) * mean(final_player_info$games))
+              conditionalPanel(
+                condition = "input.modelPicker1.indexOf('turnovers_per_game') >= 0",
+                numericInput(
+                  "modelSlider13", 
+                  "What is the quarterback's number of turnovers for the season? Integer between 0 and 45.",
+                  min = 0,
+                  max = 45,
+                  value = ceiling(mean(final_player_info$turnovers_per_game) * mean(final_player_info$games))
+                )
               )
             ),
             mainPanel(
