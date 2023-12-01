@@ -4,7 +4,6 @@
 # Load in required packages -----------------------------------------------
 
 library(tidyverse)
-library(RSelenium)
 library(rvest)
 library(janitor)
 
