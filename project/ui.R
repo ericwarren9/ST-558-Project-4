@@ -14,6 +14,8 @@ library(shiny)
 library(tidyverse)
 library(bslib)
 library(shinyWidgets)
+library(caret)
+library(data.table)
 
 
 # Read data in ------------------------------------------------------------
@@ -460,7 +462,65 @@ ui <- fluidPage(
         ),
         # Modeling Fitting tab
         tabPanel(
-          "Modeling Fitting"
+          "Model Fitting",
+          sidebarLayout(
+            sidebarPanel(
+              h3(
+                "Select Different Modeling Procedures you Want to Control"
+              ),
+              sliderInput(
+                "modelSlider1", 
+                "Proportion of data going to training set (rest goes to testing set)",
+                min = 0,
+                max = 1,
+                value = .75
+              ),
+              pickerInput(
+                "modelPicker1", "Select columns to include in models",
+                choices = colnames(dplyr::select(final_player_info, -c(cap_hit_group, missed_games, cap_percent))),
+                selected = colnames(dplyr::select(final_player_info, -c(cap_hit_group, missed_games, cap_percent))),
+                options = list(`actions-box` = TRUE,
+                               create = FALSE,
+                               placeholder = "Please Select a Season",
+                               onDropdownOpen = I("function($dropdown) {if (!this.lastQuery.length) {this.close(); this.settings.openOnFocus = false;}}"),
+                               onType = I("function (str) {if (str === \"\") {this.close();}}"),
+                               onItemAdd = I("function() {this.close();}")),
+                multiple = T
+              ),
+              sliderInput(
+                "modelSlider2", 
+                "Pick the range for the number of predictors the random forest model uses (remember to choose at least one less than the number of predictors chosen)",
+                min = 1,
+                max = ncol(dplyr::select(final_player_info, -c(cap_hit_group, missed_games))) - 1,
+                value = c(1, ceiling(sqrt(ncol(dplyr::select(final_player_info, -c(cap_hit_group, missed_games))) - 1)))
+              ),
+              sliderInput(
+                "modelSlider3", 
+                "Number of times to cross validate our data",
+                min = 3,
+                max = 10,
+                value = 5
+              ),
+              sliderInput(
+                "modelSlider4", 
+                "Number of times to repeat the cross validation of data",
+                min = 1,
+                max = 5,
+                value = 1
+              ),
+            ),
+            mainPanel(
+              tableOutput("rmseTable"),
+              br(),
+              uiOutput("better_model1"),
+              br(),
+              uiOutput("model_text1"),
+              verbatimTextOutput("summaryMLR"),
+              br(),
+              uiOutput("model_text2"),
+              plotOutput("varImpPlot")
+            )
+          )
         ),
         # Prediction tab
         tabPanel(

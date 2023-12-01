@@ -14,6 +14,8 @@ library(shiny)
 library(tidyverse)
 library(bslib)
 library(shinyWidgets)
+library(caret)
+library(data.table)
 
 
 # Read data in ------------------------------------------------------------
@@ -693,11 +695,101 @@ shinyServer(function(input, output, session) {
   })
   
   output$model_about2 <- renderText({
-    HTML(paste0("Multiple linear regression is a statistical modeling technique that uses several explanatory (or also known as predictor) variables to predict the outcome of a response variable. This is an extention of ", strong("simple linear regression"), ", in which we only use one variable to predict our response. In our case, we are trying to predict the ", strong("cap hit percentage"), " of a NFL quarterback based on how well they are performing. If you want to understand the math behind a multiple linear regression model, we can write this model's equation as $$\\hat{y} = \\beta_0 + \\beta_1 x_1 + ... + \\beta_n x_n$$ where each beta value represent the partial slope of each predictor. In less math terms this is saying that this represents the average amount by which the dependent (or response) variable increases when only that particular independent (predictor) variable increases one unit AND the other independent (predictor) variables are held constant (meaning they do not change at all). In multiple linear regression, there are two major advantages to analyzing data using modeling approach. The first is the ability to determine the relative influence of one or more predictor variables to the response. For example, we can do hypothesis testing to see what predictors have a partial slope that is statistically different from zero (meaning that the predictor is valuable to used in final prediction purposes). The other advantage is that they are easy to implement and analyze. It is really easy using some basic statistical software (like R that are using now) to make a multiple linear regression model. They are also easy to predict as we have determined how to make a prediction using slope and intercept values since middle school. Some disadvantages include that they have some required assumptions that need to be met in order to accurately fit the model. The five main assumptions underlying multiple regression models must be satisfied are linearity, homoskedasticity, independence of errors, normality, and independence of independent variables. If one of these are violated then our predictions will not be reliable. Another disadvantage is that these models are prone to overfitting which occurs when we include too many independent variables, leading to unreliable predictions. Despite these limitations, we are still going to select this model as one of choice to make predictions on our data."))
+    HTML(paste0("Multiple linear regression is a statistical modeling technique that uses several explanatory (or also known as predictor) variables to predict the outcome of a response variable. This is an extention of ", strong("simple linear regression"), ", in which we only use one variable to predict our response. In our case, we are trying to predict the ", strong("cap hit percentage"), " of a NFL quarterback based on how well they are performing. If you want to understand the math behind a multiple linear regression model, we can write this model's equation as $$\\hat{y} = \\beta_0 + \\beta_1 x_1 + ... + \\beta_n x_n$$ where each beta value represent the partial slope of each predictor. In less math terms this is saying that this represents the average amount by which the dependent (or response) variable increases when only that particular independent (predictor) variable increases one unit AND the other independent (predictor) variables are held constant (meaning they do not change at all). In multiple linear regression, there are two major advantages to analyzing data using modeling approach. The first is the ability to determine the relative influence of one or more predictor variables to the response. For example, we can do hypothesis testing to see what predictors have a partial slope that is statistically different from zero (meaning that the predictor is valuable to used in final prediction purposes). The other advantage is that they are easy to implement and analyze. It is really easy using some basic statistical software (like R that are using now) to make a multiple linear regression model. They are also easy to predict as we have determined how to make a prediction using slope and intercept values since middle school. Some disadvantages include that they have some required assumptions that need to be met in order to accurately fit the model. The five main assumptions underlying multiple regression models must be satisfied are linearity, homoskedasticity, independence of errors, normality, and independence of independent variables. If one of these are violated then our predictions will not be reliable. Another disadvantage is that these models are prone to overfitting which occurs when we include too many independent variables, leading to unreliable predictions. Despite these limitations, we are still going to select this model as one of choice to make predictions on our data. In this application, we can use the summary table to eventually select only the variables where their alpha level is less than 0.05 to get the optimal model unless you want to keep a variable you think is extremely important."))
   })
   
   output$model_about3 <- renderText({
-    HTML(paste0("A random forest model is an ensemble learning method for classification, regression and other tasks that operates by making many decision trees on our data. It can also be described as an algorithm that utilizes both repeated sampling and feature randomness to create an uncorrelated forest of decision trees. In this case we are going to use it for its regression purposes since our response variable is a continuous variable that cannot be classified. How the process is going to work is that for some value we will call b = 1 to B, we will first draw a bootstrap sample of size n from the training data. Then, we will grow a random-forest tree (for the purpose of the equations later we will call T) to the bootstrapped data and repeat the following steps for each terminal node of the tree, until the minimum node size is reached: (a) select m variables at random from the p predictor variables aand usually this value of m is the square root of p (or the number of predictor variables); (b) pick the best splitting-point among the m variables; and (c) split the node into two 'children' nodes. After doing these steps we will get our ensemble of trees. Then to make a regression prediction at whatever our input data (which we will call x), we will use the equation $$\\hat{y}(x) = \\dfrac{1}{B} \\sum_{b=1}^B T_b(x)$$ where B is the number of trees we made and T is the specific tree itself. This is essentially just taking an average of all of our trees. An advantage of using a random forest model is the power of handle large data sets with higher dimensionality and identity the most significant variables. We do not have to do to do any subsetting or step procedures like with other models and random forest outputs the importance of all the variables, so we can interpret which ones are the most important. Another advantage is how it is an effective method for estimating missing data and will maintain accuracy when a large proportion of data is missing. The last major advantage of using random forest is how it involves sampling with replacement and here one third of data is not used for training our model and thus can be used for testing (called out of bag samples), which is as accurate as using a test set for validation and removes the need for a set aside test set. Random forest also has some drawbacks. The first is that random forest for regression does not gives as precise predictions as it does in classification. In case of regression, it doesn't predict beyond the range in the training data, which can cause overfitting. Another disadvantage is that random forest modeling can feel like a black box approach, as we have very little control on what the model does. We can try different parameters and random seeds to have some input but otherwise there is little we can do. Thus, it can be hard to interpret results in saying why the model performed specific actions or how it determined what variables were more important. Despite these drawbacks we are still going to use this modeling technique because of how powerful it is."))
+    paste0("A random forest model is an ensemble learning method for classification, regression and other tasks that operates by making many decision trees on our data. It can also be described as an algorithm that utilizes both repeated sampling and feature randomness to create an uncorrelated forest of decision trees. In this case we are going to use it for its regression purposes since our response variable is a continuous variable that cannot be classified. How the process is going to work is that for some value we will call b = 1 to B, we will first draw a bootstrap sample of size n from the training data. Then, we will grow a random-forest tree (for the purpose of the equations later we will call T) to the bootstrapped data and repeat the following steps for each terminal node of the tree, until the minimum node size is reached: (a) select m variables at random from the p predictor variables aand usually this value of m is the square root of p (or the number of predictor variables); (b) pick the best splitting-point among the m variables; and (c) split the node into two 'children' nodes. After doing these steps we will get our ensemble of trees. Then to make a regression prediction at whatever our input data (which we will call x), we will use the equation $$\\hat{y}(x) = \\dfrac{1}{B} \\sum_{b=1}^B T_b(x)$$ where B is the number of trees we made and T is the specific tree itself. This is essentially just taking an average of all of our trees. An advantage of using a random forest model is the power of handle large data sets with higher dimensionality and identity the most significant variables. We do not have to do to do any subsetting or step procedures like with other models and random forest outputs the importance of all the variables, so we can interpret which ones are the most important. Another advantage is how it is an effective method for estimating missing data and will maintain accuracy when a large proportion of data is missing. The last major advantage of using random forest is how it involves sampling with replacement and here one third of data is not used for training our model and thus can be used for testing (called out of bag samples), which is as accurate as using a test set for validation and removes the need for a set aside test set. Random forest also has some drawbacks. The first is that random forest for regression does not gives as precise predictions as it does in classification. In case of regression, it doesn't predict beyond the range in the training data, which can cause overfitting. Another disadvantage is that random forest modeling can feel like a black box approach, as we have very little control on what the model does. We can try different parameters and random seeds to have some input but otherwise there is little we can do. Thus, it can be hard to interpret results in saying why the model performed specific actions or how it determined what variables were more important. Despite these drawbacks we are still going to use this modeling technique because of how powerful it is.")
+  })
+  
+  # Split data into test and training set
+  index <- reactive({
+    set.seed(999)
+    req("input$modelSlider1")
+    createDataPartition(final_player_info$cap_percent, p = input$modelSlider1, list = FALSE)
+  })
+  
+  trainingData <- reactive({
+    final_player_info[index(), ]
+  })
+  
+  testingData <- reactive({
+    final_player_info[-index(), ]
+  })
+  
+  # Make MLR model
+  mlrModel <- reactive({
+    train(
+      as.formula(paste("cap_percent ~ ",paste(input$modelPicker1, collapse="+"))),
+      data = trainingData(),
+      method = "lm",
+      preProcess = c("scale", "center"),
+      trControl = trainControl(method = "repeatedcv", number = input$modelSlider3, repeats = input$modelSlider4)
+    )
+  })
+  
+  # Make random forest model
+  rfModel <- reactive({
+    train(
+      as.formula(paste("cap_percent ~ ",paste(input$modelPicker1, collapse="+"))),
+      data = trainingData(),
+      method = "rf",
+      preProcess = c("scale", "center"),
+      trControl = trainControl(method = "repeatedcv", 
+                               number = input$modelSlider3, 
+                               repeats = input$modelSlider4),
+      tuneGrid = data.frame(mtry = input$modelSlider2[1]:input$modelSlider2[2])
+    )
+  })
+  
+  # Get MLR model predictions
+  mlrPreds <- reactive({
+    predict(mlrModel(), testingData())
+  })
+  
+  # Get random forest predictions
+  rfPreds <- reactive({
+    predict(rfModel(), testingData())
+  })
+  
+  # Get RMSE values for table
+  output$rmseTable <- renderTable({
+    rsme_cats <- c(rep("train", 2), rep("test", 2))
+    rmse_model <- rep(c("Multiple Linear Regression", "Random Forest"), 2)
+    rmse_values <- c(mlrModel()$resample$RMSE[1], rfModel()$resample$RMSE[1], RMSE(mlrPreds(), testingData()$cap_percent)[1], RMSE(rfPreds(), testingData()$cap_percent)[1])
+    
+    cbind("Train or Test Data?" = rsme_cats, "Model" = rmse_model, "RMSE Value" = rmse_values)
+  })
+  
+  # Have a line of text that helps with showing which model is better
+  output$better_model1 <- renderText({
+    if(RMSE(mlrPreds(), testingData()$cap_percent)[1] < RMSE(rfPreds(), testingData()$cap_percent)[1]) {
+      paste0("The multiple linear regression model is better for predicting since it has a lower test RMSE value.")
+    } else if(RMSE(mlrPreds(), testingData()$cap_percent)[1] == RMSE(rfPreds(), testingData()$cap_percent)[1]) {
+      paste0("Both models are deemed equal for predicting purposes since it has the same test RMSE value.")
+    } else {
+      paste0("The random forest model is better for predicting since it has a lower test RMSE value.")
+    }
+  })
+  
+  # Title for showing the summary of mlr
+  output$model_text1 <- renderText({
+    paste0("Please check out the summary of the multiple linear regression model.")
+  })
+  
+  # Get summary values for MLR
+  output$summaryMLR <- renderPrint({
+    summary(mlrModel())
+  })
+  
+  # Title for showing the variable importance of rf
+  output$model_text2 <- renderText({
+    paste0("Please check out the following output ranking which variables were the most important for the random forest model.")
+  })
+  
+  # Make the variable importance plot
+  output$varImpPlot <- renderPlot({
+    plot(varImp(rfModel()))
   })
   
 })
