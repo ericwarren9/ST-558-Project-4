@@ -6,16 +6,16 @@ This application uses two modeling methods -- random forest and multiple linear 
 
 In order to run this application on your local server there are some things you need to do. First make sure you have (or if you do not install) the following packages below:
 
-- shiny: Used the create the application
-- shinyWidgets: Helps make the applicaton more user friendly and look a little more clean
-- shinytitle: Makes titles look better and helps with formatting of titles and labels
-- bslib: helps Make some of the picker options more user friendly
-- data.table: Helps make our tables look neater in our shiny application
-- tidyverse: Helps with data manipulations
-- caret: Used for our modeling to produce our multiple linear regression and random forest models
-- randomForest: Helps let us use tuning optons for our random forest model
-- rvest: Used to download and scrape data from the web
-- janitor: Used to clean the column names that are messy and not usable (scrapping data from the web can give you messy column names)
+- `shiny`: Used the create the application
+- `shinyWidgets`: Helps make the applicaton more user friendly and look a little more clean
+- `shinytitle`: Makes titles look better and helps with formatting of titles and labels
+- `bslib`: helps Make some of the picker options more user friendly
+- `data.table`: Helps make our tables look neater in our shiny application
+- `tidyverse`: Helps with data manipulations
+- `caret`: Used for our modeling to produce our multiple linear regression and random forest models
+- `randomForest`: Helps let us use tuning optons for our random forest model
+- `rvest`: Used to download and scrape data from the web
+- `janitor`: Used to clean the column names that are messy and not usable (scrapping data from the web can give you messy column names)
 
 If you would like to install all of these packages at once in case you are not sure that you have them you may use the following line of code in your R application: `install.packages(c("shiny", "shinyWidgets", "shinytitle", "bslib", "data.table", "tidyverse", "caret", "randomForest", "rvest", "janitor"))`
 
