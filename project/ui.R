@@ -524,7 +524,7 @@ ui <- fluidPage(
                 "modelSlider4", 
                 "Number of times to repeat the cross validation of data",
                 min = 1,
-                max = 5,
+                max = 3,
                 value = 1
               ),
             ),
