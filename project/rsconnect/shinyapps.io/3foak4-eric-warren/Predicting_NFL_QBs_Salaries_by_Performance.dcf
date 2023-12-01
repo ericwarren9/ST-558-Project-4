@@ -5,7 +5,7 @@ account: 3foak4-eric-warren
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 10687627
-bundleId: 7996190
+bundleId: 7996437
 url: https://3foak4-eric-warren.shinyapps.io/Predicting_NFL_QBs_Salaries_by_Performance/
 version: 1
 asMultiple: FALSE
