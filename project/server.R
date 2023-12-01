@@ -782,6 +782,7 @@ shinyServer(function(input, output, session) {
   
   # Make random forest model
   rfModel <- reactive({
+    set.seed(999)
     train(
       as.formula(paste("cap_percent ~ ",paste(input$modelPicker1, collapse="+"))),
       data = trainingData(),
