@@ -477,7 +477,11 @@ ui <- fluidPage(
           br(),
           withMathJax(uiOutput("model_about2")),
           br(),
-          withMathJax(uiOutput("model_about3"))
+          uiOutput("model_about3"),
+          br(),
+          withMathJax(uiOutput("model_about4")),
+          br(),
+          uiOutput("model_about5")
         ),
         # Modeling Fitting tab
         tabPanel(
