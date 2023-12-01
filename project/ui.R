@@ -16,6 +16,9 @@ library(bslib)
 library(shinyWidgets)
 library(caret)
 library(data.table)
+library(RSelenium)
+library(rvest)
+library(janitor)
 
 
 # Read data in ------------------------------------------------------------
@@ -33,6 +36,16 @@ final_player_info <- read_rds("player_stats_and_salary.rds") %>%
     year = factor(year)
   )
 
+# Get salary cap numbers for league for later
+salary_cap <- (read_html("https://www.spotrac.com/nfl/cba/") %>% 
+                 html_table())[[1]] %>%
+  janitor::clean_names() %>%
+  dplyr::select(year, cap_maximum) %>%
+  mutate(year = as.numeric(year)) %>%
+  dplyr::filter((year >= 2007) & (year != 2010) & (year <= 2023)) %>%
+  mutate(cap_maximum = parse_number(cap_maximum),
+         year = as.character(year))
+
 
 # The application ---------------------------------------------------------
 
@@ -43,9 +56,15 @@ ui <- fluidPage(
         align = "center",
         br(),
     ), 
-    windowTitle =  "Quarterbacks Cap Hit Percentage by Performance"
+    windowTitle =  "Quarterbacks Predicted Cap Hit Percentage by Performance"
   ),
   shinytitle::use_shiny_title(),
+  tags$style(type="text/css",
+             ".shiny-output-error { visibility: hidden; }",
+             ".shiny-output-error:before { visibility: hidden; }",
+             ".shiny-output-warning { visibility: hidden; }",
+             ".shiny-output-warning:before { visibility: hidden; }"
+  ),
   # Make into different tabs
   tabsetPanel(
     type = "tabs",
@@ -481,7 +500,7 @@ ui <- fluidPage(
                 selected = colnames(dplyr::select(final_player_info, -c(cap_hit_group, missed_games, cap_percent))),
                 options = list(`actions-box` = TRUE,
                                create = FALSE,
-                               placeholder = "Please Select a Season",
+                               placeholder = "Please Select Variables to Include",
                                onDropdownOpen = I("function($dropdown) {if (!this.lastQuery.length) {this.close(); this.settings.openOnFocus = false;}}"),
                                onType = I("function (str) {if (str === \"\") {this.close();}}"),
                                onItemAdd = I("function() {this.close();}")),
@@ -524,7 +543,91 @@ ui <- fluidPage(
         ),
         # Prediction tab
         tabPanel(
-          "Prediction"
+          "Prediction",
+          sidebarLayout(
+            sidebarPanel(
+              pickerInput(
+                "modelPicker2", "Select what year our 'player' played",
+                choices = unique(final_player_info$year),
+                selected = "2022",
+                options = list(`actions-box` = TRUE,
+                               create = FALSE,
+                               placeholder = "Please Select a Season",
+                               onDropdownOpen = I("function($dropdown) {if (!this.lastQuery.length) {this.close(); this.settings.openOnFocus = false;}}"),
+                               onType = I("function (str) {if (str === \"\") {this.close();}}"),
+                               onItemAdd = I("function() {this.close();}")),
+                multiple = F
+              ),
+              numericInput(
+                "modelSlider5", 
+                "What is the quarterback's passing percentage? Between 0 and 100.",
+                value = round(mean(final_player_info$passing_percentage), 2),
+                min = 0,
+                max = 100
+              ),
+              numericInput(
+                "modelSlider6", 
+                "What is the quarterback's average passing yards per game? Between 0 and 400.",
+                min = 0,
+                max = 400,
+                value = round(mean(final_player_info$passing_yards_per_game), 2)
+              ),
+              numericInput(
+                "modelSlider7", 
+                "What is the quarterback's passing yards per attempt? Between 0 and 15.",
+                min = 0,
+                max = 15,
+                value = round(mean(final_player_info$passing_yards_per_attempt), 2)
+              ),
+              numericInput(
+                "modelSlider8", 
+                "What is the quarterback's passing touchdowns for the season? Integer between 0 and 65",
+                min = 0,
+                max = 65,
+                value = ceiling(mean(final_player_info$passing_tds_per_game) * mean(final_player_info$games))
+              ),
+              numericInput(
+                "modelSlider9", 
+                "What is the quarterback's rushing yards per game? Between -10 and 100.",
+                min = -10,
+                max = 100,
+                value = round(mean(final_player_info$rushing_yards_per_game), 2)
+              ),
+              numericInput(
+                "modelSlider10", 
+                "What is the quarterback's rushing touchdowns for the season? Integer between 0 and 34.",
+                min = 0,
+                max = 34,
+                value = ceiling(mean(final_player_info$rushing_tds_per_game) * mean(final_player_info$games))
+              ),
+              numericInput(
+                "modelSlider11", 
+                "What is the quarterback's number of games played in a season? (We will assume they were the starter and not injured much.) Integer between 10 and 17",
+                min = 10,
+                max = 17,
+                value = ceiling(mean(final_player_info$games))
+              ),
+              numericInput(
+                "modelSlider12", 
+                "What is the quarterback's number of sacks for the season? Integer between 0 and 100",
+                min = 0,
+                max = 100,
+                value = ceiling(mean(final_player_info$sacks_per_game) * mean(final_player_info$games))
+              ),
+              numericInput(
+                "modelSlider13", 
+                "What is the quarterback's number of turnovers for the season? Integer between 0 and 45.",
+                min = 0,
+                max = 45,
+                value = ceiling(mean(final_player_info$turnovers_per_game) * mean(final_player_info$games))
+              )
+            ),
+            mainPanel(
+              tableOutput("predictionTable"),
+              br(),
+              uiOutput("better_model2")
+            )
+          )
         )
       )
     )

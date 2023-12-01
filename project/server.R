@@ -16,6 +16,9 @@ library(bslib)
 library(shinyWidgets)
 library(caret)
 library(data.table)
+library(RSelenium)
+library(rvest)
+library(janitor)
 
 
 # Read data in ------------------------------------------------------------
@@ -32,6 +35,16 @@ final_player_info <- read_rds("player_stats_and_salary.rds") %>%
     missed_games = factor(missed_games),
     year = factor(year)
   )
+
+# Get salary cap numbers for league for later
+salary_cap <- (read_html("https://www.spotrac.com/nfl/cba/") %>% 
+                 html_table())[[1]] %>%
+  janitor::clean_names() %>%
+  dplyr::select(year, cap_maximum) %>%
+  mutate(year = as.numeric(year)) %>%
+  dplyr::filter((year >= 2007) & (year != 2010) & (year <= 2023)) %>%
+  mutate(cap_maximum = parse_number(cap_maximum),
+         year = as.character(year))
 
 
 # Start the server section of app -----------------------------------------
@@ -728,6 +741,17 @@ shinyServer(function(input, output, session) {
     )
   })
   
+  # Update mtry values
+  observe({
+    updateSliderInput(
+      session, 
+      "modelSlider2", 
+      min = 1,
+      max = max(ceiling(length(input$modelPicker1)) - 1, 1),
+      value = c(1, max(ceiling(sqrt(length(input$modelPicker1))), 1))
+    )
+  })
+  
   # Make random forest model
   rfModel <- reactive({
     train(
@@ -766,7 +790,7 @@ shinyServer(function(input, output, session) {
     if(RMSE(mlrPreds(), testingData()$cap_percent)[1] < RMSE(rfPreds(), testingData()$cap_percent)[1]) {
       paste0("The multiple linear regression model is better for predicting since it has a lower test RMSE value.")
     } else if(RMSE(mlrPreds(), testingData()$cap_percent)[1] == RMSE(rfPreds(), testingData()$cap_percent)[1]) {
-      paste0("Both models are deemed equal for predicting purposes since it has the same test RMSE value.")
+      paste0("Both models are deemed equal for predicting purposes since they have the same test RMSE value.")
     } else {
       paste0("The random forest model is better for predicting since it has a lower test RMSE value.")
     }
@@ -790,6 +814,79 @@ shinyServer(function(input, output, session) {
   # Make the variable importance plot
   output$varImpPlot <- renderPlot({
     plot(varImp(rfModel()))
+  })
+  
+  # Update the number of games slider dependent on the year (played 16 games in 2020 and earlier; 17 games in 2021 and later)
+  observe({
+    if(as.numeric(input$modelPicker2) <= 2020){
+      updateSliderInput(
+        session, 
+        "modelSlider11", 
+        value = mean(final_player_info$games),
+        min = 10, 
+        max = 16,
+      )
+    } else {
+      updateSliderInput(
+        session, 
+        "sliderValue", 
+        value = mean(final_player_info$games),
+        min = 10, 
+        max = 17,
+      )
+    }
+  })
+  
+  # Make the actual prediction value for both models
+  output$predictionTable <- renderTable({
+    
+    # Make the cap percentage prediction for the mlr model
+    mlrPrediction <- max(round(predict(mlrModel(), newdata = data.frame(passing_yards_per_game = input$modelSlider6, games = input$modelSlider11, rushing_yards_per_game = input$modelSlider9, passing_percentage = input$modelSlider5, passing_tds_per_game = input$modelSlider8 / input$modelSlider11, passing_yards_per_attempt = input$modelSlider7, rushing_tds_per_game = input$modelSlider10 / input$modelSlider11, turnovers_per_game = input$modelSlider13 / input$modelSlider11, sacks_per_game = input$modelSlider12 / input$modelSlider11,  year = input$modelPicker2)), 3), 0)
+    
+    # Make the cap percentage prediction for the mlr model
+    rfPrediction <- max(round(predict(rfModel(), newdata = data.frame(passing_yards_per_game = input$modelSlider6, games = input$modelSlider11, rushing_yards_per_game = input$modelSlider9, passing_percentage = as.numeric(input$modelSlider5), passing_tds_per_game = input$modelSlider8 / input$modelSlider11, passing_yards_per_attempt = input$modelSlider7, rushing_tds_per_game = input$modelSlider10 / input$modelSlider11, turnovers_per_game = input$modelSlider13 / input$modelSlider11, sacks_per_game = input$modelSlider12 / input$modelSlider11,  year = input$modelPicker2)), 3), 0)
+    
+    # Make the model types column for the table
+    modelType <- c("Multiple Linear Regression", "Random Forest")
+    
+    # Get the year for the table
+    modelYear <- rep(input$modelPicker2, 2)
+    
+    # Make the season multiplier
+    seasonMultiplier <- salary_cap[salary_cap$year == input$modelPicker2, 2][[1]]
+    
+    # Function to get salaries in dollar amounts
+    format_money  <- function(x, ...) {
+      paste0("$", formatC(as.numeric(x), format="f", digits=2, big.mark=","))
+    }
+    
+    # Get the chosen year salary
+    mlrChosenYearSalary <- format_money(mlrPrediction * seasonMultiplier / 100)
+    rfChosenYearSalary <- format_money(rfPrediction * seasonMultiplier / 100)
+    
+    # Get the 2023 (current season) cap hit salaries
+    mlr2023Salary <- format_money(mlrPrediction * salary_cap[salary_cap$year == "2023", 2][[1]] / 100)
+    rf2023Salary <- format_money(rfPrediction * salary_cap[salary_cap$year == "2023", 2][[1]] / 100)
+    
+    # Combine into table
+    cbind(
+      "Model Type" = modelType, 
+      "Year Being Modeled" = modelYear, 
+      "Cap Percentage Predicted" = c(mlrPrediction, rfPrediction),
+      "Chosen Year Predicted Salary" = c(mlrChosenYearSalary, rfChosenYearSalary),
+      "2023 Predicted Salary Equivalent" = c(mlr2023Salary, rf2023Salary)
+    )
+  })
+  
+  # Put the reminder text underneath table
+  output$better_model2 <- renderText({
+    if(RMSE(mlrPreds(), testingData()$cap_percent)[1] < RMSE(rfPreds(), testingData()$cap_percent)[1]) {
+      paste0("Please not that the multiple linear regression model is better for predicting since it had a lower test RMSE value.")
+    } else if(RMSE(mlrPreds(), testingData()$cap_percent)[1] == RMSE(rfPreds(), testingData()$cap_percent)[1]) {
+      paste0("Please note that both models are deemed equal for predicting purposes since they had the same test RMSE value.")
+    } else {
+      paste0("Please note that the random forest model is better for predicting since it had a lower test RMSE value.")
+    }
   })
   
 })
