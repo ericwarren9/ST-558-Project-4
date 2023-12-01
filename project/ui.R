@@ -105,10 +105,10 @@ ui <- fluidPage(
                 "Select the Exploratory Data Analysis Features You Would Like to See"
               ),
               sliderInput(
-                "slider1", "QB's Cap Hit for Particular NFL Season",
-                min = min(final_player_info$cap_percent) - 1,
+                "slider1", "QB's Cap Hit for Particular NFL Season as a Percentage of Team's Available Budget",
+                min = 0,
                 max = max(final_player_info$cap_percent) + 1,
-                value = c(min(final_player_info$cap_percent) - 1,
+                value = c(0,
                           max(final_player_info$cap_percent) + 1)
               ),
               sliderInput(
@@ -519,7 +519,7 @@ ui <- fluidPage(
               ),
               sliderInput(
                 "modelSlider2", 
-                "Pick the range for the number of predictors the random forest model uses (remember to choose at least one less than the number of predictors chosen)",
+                "Pick the range for the number of predictors the random forest model uses to optimize its model",
                 min = 1,
                 max = ncol(dplyr::select(final_player_info, -c(cap_hit_group, missed_games))) - 1,
                 value = c(1, ceiling(sqrt(ncol(dplyr::select(final_player_info, -c(cap_hit_group, missed_games))) - 1)))
@@ -576,7 +576,7 @@ ui <- fluidPage(
                 condition = "input.modelPicker1.indexOf('passing_percentage') >= 0",
                 numericInput(
                   "modelSlider5", 
-                  "What is the quarterback's passing percentage? Between 0 and 100.",
+                  "What is the quarterback's passing completion percentage? Between 0 and 100.",
                   value = round(mean(final_player_info$passing_percentage), 2),
                   min = 0,
                   max = 100
@@ -606,7 +606,7 @@ ui <- fluidPage(
                 condition = "input.modelPicker1.indexOf('passing_tds_per_game') >= 0",
                 numericInput(
                   "modelSlider8", 
-                  "What is the quarterback's passing touchdowns for the season? Integer between 0 and 65",
+                  "What is the quarterback's total passing touchdowns for the season? Integer between 0 and 65",
                   min = 0,
                   max = 65,
                   value = ceiling(mean(final_player_info$passing_tds_per_game) * mean(final_player_info$games))
@@ -616,7 +616,7 @@ ui <- fluidPage(
                 condition = "input.modelPicker1.indexOf('rushing_yards_per_game') >= 0",
                 numericInput(
                   "modelSlider9", 
-                  "What is the quarterback's rushing yards per game? Between -10 and 100.",
+                  "What is the quarterback's average rushing yards per game? Between -10 and 100.",
                   min = -10,
                   max = 100,
                   value = round(mean(final_player_info$rushing_yards_per_game), 2)
@@ -626,7 +626,7 @@ ui <- fluidPage(
                 condition = "input.modelPicker1.indexOf('rushing_tds_per_game') >= 0",
                 numericInput(
                   "modelSlider10", 
-                  "What is the quarterback's rushing touchdowns for the season? Integer between 0 and 34.",
+                  "What is the quarterback's total rushing touchdowns for the season? Integer between 0 and 34.",
                   min = 0,
                   max = 34,
                   value = ceiling(mean(final_player_info$rushing_tds_per_game) * mean(final_player_info$games))
@@ -636,7 +636,7 @@ ui <- fluidPage(
                 condition = "input.modelPicker1.indexOf('games') >= 0",
                 numericInput(
                   "modelSlider11", 
-                  "What is the quarterback's number of games played in a season? (We will assume they were the starter and not injured much.) Integer between 10 and 17",
+                  "What is the quarterback's number of games played in a season? (We will assume they were the starter and not injured much.) Integer between 10 and 17 for seasons 2021 and later and 10 to 16 for seasons 2020 and earlier",
                   min = 10,
                   max = 17,
                   value = ceiling(mean(final_player_info$games))
@@ -646,7 +646,7 @@ ui <- fluidPage(
                 condition = "input.modelPicker1.indexOf('sacks_per_game') >= 0",
                 numericInput(
                   "modelSlider12", 
-                  "What is the quarterback's number of sacks for the season? Integer between 0 and 100",
+                  "What is the quarterback's total number of sacks taken for the season? Integer between 0 and 100",
                   min = 0,
                   max = 100,
                   value = ceiling(mean(final_player_info$sacks_per_game) * mean(final_player_info$games))
@@ -656,7 +656,7 @@ ui <- fluidPage(
                 condition = "input.modelPicker1.indexOf('turnovers_per_game') >= 0",
                 numericInput(
                   "modelSlider13", 
-                  "What is the quarterback's number of turnovers for the season? Integer between 0 and 45.",
+                  "What is the quarterback's total number of turnovers for the season? This is interceptions plus fumbles. Integer between 0 and 45.",
                   min = 0,
                   max = 45,
                   value = ceiling(mean(final_player_info$turnovers_per_game) * mean(final_player_info$games))
